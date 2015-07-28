@@ -85,20 +85,30 @@ twentyc.editable.action = new twentyc.cls.Registry();
 twentyc.editable.action.register(
   "base", 
   {
-    execute : function() {},
+    execute : function(trigger, container) {
+      this.trigger = trigger
+      this.container = container;
+      if(this.loading_shim)
+        this.container.children('.editable.loading-shim').show();
+    },
 
     signal_error : function(container, error) {
       var payload = { 
         reason : error.type,
+        info : error.info,
         data : error.data
       }
       container.trigger("action-error", payload);
       container.trigger("action-error:"+this._meta.name, payload);
+      if(this.loading_shim)
+        this.container.children('.editable.loading-shim').hide();
     },
 
     signal_success : function(container, payload) {
       container.trigger("action-success", payload);
       container.trigger("action-success:"+this._meta.name, payload);
+      if(this.loading_shim)
+        this.container.children('.editable.loading-shim').hide();
     }
   }
 );
@@ -107,6 +117,7 @@ twentyc.editable.action.register(
   "toggle-edit",
   {
     execute : function(trigger, container) {
+      this.base_execute(trigger, container);
       container.editable("toggle");
       container.trigger("action-success:toggle", { mode : container.data("edit-mode") });
     }
@@ -118,7 +129,9 @@ twentyc.editable.action.register(
 twentyc.editable.action.register(
   "submit",
   {
+    loading_shim : true,
     execute : function(trigger, container) {
+      this.base_execute(trigger, container);
       var targetParam = container.data("edit-target").split(":")
 
       // check if specified target has a handler, if not use standard XHR hander
@@ -155,6 +168,9 @@ twentyc.editable.action.register(
       $(target).on("success", function(ev, data) {
         me.signal_success(container, data);
         container.editable("toggle", { data : data });
+      });
+      $(target).on("error", function(ev, error) { 
+        me.signal_error(container, error);
       });
       return target.execute();
     }
@@ -199,7 +215,17 @@ twentyc.editable.target.register(
         url : this.args[0],
         method : "POST",
         data : this.data,
-        success : function(response) { me.trigger("success", data); }
+        success : function(response) { 
+          me.trigger("success", data); 
+        }
+      }).fail(function(response) {
+        me.trigger(
+          "error",
+          {
+            type : "HTTPError",
+            info : response.status+" "+response.statusText
+          }
+        );
       });
     }
   },
@@ -555,12 +581,18 @@ $.fn.editable = function(action, arg) {
         me.prepend(errorContainer)
         me.data("edit-error-container", errorContainer);
 
+        // create loading shim
+        var loadingShim = $('<div class="editable loading-shim"></div>');
+        loadingShim.hide();
+        me.prepend(loadingShim)
+        me.data("edit-loading-shim", loadingShim);
+
         // whenever an action signals an error we want to update and show
         // the error container
         me.on("action-error", function(e, payload) {
           var popin = $(this).find(".editable.popin.error").editable("filter", { belongs : $(this) });
           popin.find('.main').html(twentyc.editable.error.humanize(payload.reason));
-          popin.find('.extra').html(payload.data.extra || "");
+          popin.find('.extra').html(payload.info || "");
           popin.show();
         });
 

@@ -22,15 +22,19 @@ twentyc.editable.target.register(
       var data = this.data;
       $.ajax(
         {
-          //url : "/api/"+objectType,
-          url : "a.html",
+          url : "/20c-js/js-edit/demo?"+objectType,
           method : method,
           data : this.data,
           success : function(response) {
             me.trigger("success", data);
           }
         }
-      );
+      ).fail(function(response) { 
+        me.trigger("error", {
+          type : "HTTPError",
+          info : response.status+" "+response.statusText
+        }) 
+      });
     }
   },
   "base"
