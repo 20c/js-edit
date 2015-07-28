@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+  <title>20c editable demo</title>
+  <script src="//code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
+  <script src="../src/twentyc.core.js" type="text/javascript"></script>
+  <script src="../src/twentyc.edit.js" type="text/javascript"></script>
+  <script src="demo.js" type="text/javascript"></script>
+  <link href="../src/twentyc.edit.css" type="text/css" rel="stylesheet" />
+  <link href="demo.css" type="text/css" rel="stylesheet" />
+
+  </head>
+  <body>
+    
+    <div class="editable" id="test" data-edit-target="api:contact:post"  data-edit-id="0">
+
+      <div data-edit-type="string"
+           data-edit-name="username"
+           data-edit-required="yes">
+           John Smith
+      </div>
+
+      <div data-edit-type="email"
+           data-edit-name="email">
+           john@domain.com
+      </div>
+
+      <div data-edit-type="number"
+           data-edit-name="phone">
+           12345
+      </div>
+
+      <div data-edit-type="url"
+           data-edit-name="website">
+           http://www.google.com
+      </div>
+
+      <div data-edit-type="text"
+           data-edit-name="comments">
+           Lot of text
+      </div>
+
+      <div data-edit-type="select"
+           data-edit-name="selection"
+           data-edit-data="test_data"
+           data-edit-value="2">
+           Second Item
+      </div>
+
+      <div>
+        Can also have some 
+        <span data-edit-type="string"
+              data-edit-name="inline">
+              inline
+        </span>
+        editing
+      </div>
+
+      <div>
+        <span data-edit-type="bool"
+              data-edit-name="bool_1">
+              Yes
+        </span>
+        <span>
+          Check this, or don't
+        </span>
+      </div>
+
+      <div>
+        <span data-edit-type="bool"
+              data-edit-name="bool_2"
+              data-edit-required="yes">
+              - 
+        </span>
+        <span>
+          Need to agree to this 
+        </span>
+      </div>
+
+
+      <div id="test:sub" data-edit-target="api:post" data-edit-id="0">
+        <div data-edit-type="number"
+             data-edit-name="id">
+             123
+        </div>
+      </div>
+
+
+      <div data-edit-toggled="view">
+        <a class="button" data-edit-action="toggle-edit">Edit</a>
+      </div>
+      <div data-edit-toggled="edit" style="display:none;">
+        <a class="button" data-edit-action="toggle-edit">Cancel</a>
+        <a class="button" data-edit-action="submit">Save</a>
+      </div>
+    </div>
+
+  </body>
+</html>
