@@ -1,2 +1,2 @@
-20c.js-core 1.0.2: github.com/20c/js-core
+20c.js-core 1.0.3: github.com/20c/js-core
 jquery 1.11.3

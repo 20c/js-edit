@@ -120,7 +120,12 @@ twentyc.editable.action.register(
   {
     execute : function(trigger, container) {
       var targetParam = container.data("edit-target").split(":")
-      var handler = twentyc.editable.target.get(targetParam[0])
+
+      // check if specified target has a handler, if not use standard XHR hander
+      if(!twentyc.editable.target.has(targetParam[0])) 
+        var handler = twentyc.editable.target.get("XHRPost")
+      else
+        var handler = twentyc.editable.target.get(targetParam[0])
       var me = this;
 
       try {
@@ -184,6 +189,22 @@ twentyc.editable.target.register(
     execute : function() {}
   }
 );
+
+twentyc.editable.target.register(
+  "XHRPost",
+  {
+    execute : function() {
+      var me = $(this), data = this.data;
+      $.ajax({
+        url : this.args[0],
+        method : "POST",
+        data : this.data,
+        success : function(response) { me.trigger("success", data); }
+      });
+    }
+  },
+  "base"
+)
 
 /**
  * allows you to setup and manage input types
