@@ -18,3 +18,17 @@ a.button {
 body > div.editable > div {
   padding: 10px;
 }
+
+div.checkbox {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+}
+
+div.checkbox.yes {
+  background-color: green;
+}
+
+div.checkbox.no {
+  background-color: red;
+}

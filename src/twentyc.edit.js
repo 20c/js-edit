@@ -24,6 +24,8 @@ twentyc.editable = {
     if(this.initialized)
       return;
     
+    this.templates.init();
+
     $('[data-edit-target]').editable();
     
     // hook into data load so we can update selects with matching datasets
@@ -317,7 +319,7 @@ twentyc.editable.input.register(
         var tmpl = twentyc.editable.templates.get(tmplId);
         var node = tmpl.clone(true);
         if(this.template_handlers[tmplId]) {
-          this.template_handlers[tmplId](value, node);
+          this.template_handlers[tmplId](value, node, this);
         }
         this.source.empty().append(node);
       }
@@ -461,7 +463,18 @@ twentyc.editable.input.register(
 
     apply : function(value) {
       this.source.data("edit-value", this.get());
-      this.source.html(this.value_to_label());
+      if(!this.source.data("edit-template")) { 
+        this.source.html(this.value_to_label());
+      } else {
+        var tmplId = this.source.data("edit-template");
+        var tmpl = twentyc.editable.templates.get(tmplId);
+        var node = tmpl.clone(true);
+        if(this.template_handlers[tmplId]) {
+          this.template_handlers[tmplId](value, node, this);
+        }
+        this.source.empty().append(node);
+      }
+
     }
   },
   "base"

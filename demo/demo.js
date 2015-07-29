@@ -40,6 +40,12 @@ twentyc.editable.target.register(
   "base"
 );
 
+twentyc.editable.input.get("bool").prototype.template_handlers["check"] = function(value, node, input) {
+  node.addClass(value ? "yes" : "no")
+}
+
+
+
 $(document).ready(function() {
   $('#test').on("action-success:submit", function(ev, data) {
     console.log("Data successfully sent to server", ev, data);
