@@ -270,7 +270,6 @@ twentyc.editable.input = new (twentyc.cls.extend(
 twentyc.editable.input.register(
   "base",
   {
-    
     set : function(value) {
       if(value == undefined) {
         this.element.val(this.source.text().trim());
@@ -311,7 +310,17 @@ twentyc.editable.input.register(
     },
     
     apply : function(value) {
-      this.source.html(this.get());
+      if(!this.source.data("edit-template")) 
+        this.source.html(this.get());
+      else {
+        var tmplId = this.source.data("edit-template");
+        var tmpl = twentyc.editable.templates.get(tmplId);
+        var node = tmpl.clone(true);
+        if(this.template_handlers[tmplId]) {
+          this.template_handlers[tmplId](value, node);
+        }
+        this.source.empty().append(node);
+      }
     },
     
     show_note : function(txt, classes) {
@@ -342,7 +351,9 @@ twentyc.editable.input.register(
     reset : function() {
       this.close_note();
       this.element.removeClass("validation-error");
-    }
+    },
+
+    template_handlers : {}
   }
 );
 
@@ -356,6 +367,7 @@ twentyc.editable.input.register(
   "email",
   {
     placeholder : "name@domain.com",
+
     validate : function() {
       if(this.get() === "")
         return true
@@ -363,6 +375,12 @@ twentyc.editable.input.register(
     },
     validation_message : function() {
       return "Needs to be a valid email address";
+    },
+
+    template_handlers : {
+      "link" : function(value, node) {
+        node.attr("href", "mailto:"+value).html(value);
+      }
     }
   },
   "string"
@@ -372,7 +390,6 @@ twentyc.editable.input.register(
   "url",
   {
     placeholder : "http://",
-
     validate : function() {
       var url = this.get()
       if(url === "")
@@ -387,7 +404,13 @@ twentyc.editable.input.register(
     },
     validation_message : function() {
       return "Needs to be a valid url";
+    },
+    template_handlers : {
+      "link" : function(value, node) {
+        node.attr("href", value).html(value);
+      }
     }
+
   },
   "string"
 );
@@ -497,6 +520,48 @@ twentyc.editable.input.register(
   },
   "base"
 );
+
+/**
+ * class that managed DOM templates
+ *
+ * @class templates
+ * @namespace twentyc.editable.templates
+ * @static
+ */
+
+twentyc.editable.templates = {
+  
+  _templates : {},
+
+  register : function(id, node) {
+    if(this._templates[id])
+      throw("Duplicate template id: "+id);
+    this._templates[id] = node;
+  },
+
+  get : function(id) {
+    if(!this._templates[id])
+      throw("Tried to retrieve unknown template: "+id);
+    return this._templates[id];
+  },
+
+  init : function() {
+    if(this.initialized)
+      return;
+
+    $('#editable-templates').children().each(function(idx) {
+      twentyc.editable.templates.register(
+        this.id,
+        $(this)
+      );
+    });
+
+    this.initialized = true;
+  }
+
+}
+
+twentyc.editable.templates.register("link", $('<a></a>'));
 
 /*
  * jQuery functions
