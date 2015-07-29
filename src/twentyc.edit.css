@@ -90,3 +90,7 @@ div[data-edit-target] {
   bottom: 0px;
   background-color: rgba(255,255,255,0.75);
 }
+
+.editable > .payload {
+  display: none;
+}

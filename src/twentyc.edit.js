@@ -770,9 +770,18 @@ $.fn.editable = function(action, arg) {
         });
         arg["_validationErrors"] = validationErrors;
 
+        // if data-edit-id is specified make sure to copy it to exported data
+        // under _id
         if(me.data("edit-id") != undefined) {
           arg["_id"] = me.data("edit-id");
         }
+
+        // check if payload element exists, and if it does add the data from
+        // it to the exported data
+        me.children('.payload').children('[data-edit-name]').each(function(idx) {
+          var plel = $(this);
+          arg[plel.data("edit-name")] = plel.text().trim();
+        });
 
         if(!arg["_valid"])
           throw({type:"ValidationErrors", data:arg}); 
