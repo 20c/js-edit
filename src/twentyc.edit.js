@@ -770,6 +770,10 @@ $.fn.editable = function(action, arg) {
         });
         arg["_validationErrors"] = validationErrors;
 
+        if(me.data("edit-id") != undefined) {
+          arg["_id"] = me.data("edit-id");
+        }
+
         if(!arg["_valid"])
           throw({type:"ValidationErrors", data:arg}); 
       
