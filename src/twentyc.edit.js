@@ -733,6 +733,8 @@ $.fn.editable = function(action, arg) {
           me.find('[data-edit-toggled="view"]').show();
           mode = "view";
 
+          me.removeClass("mode-edit")
+
           if(!arg)
             me.trigger("edit-cancel");
 
@@ -740,6 +742,8 @@ $.fn.editable = function(action, arg) {
           me.find('[data-edit-toggled="edit"]').show();
           me.find('[data-edit-toggled="view"]').hide();
           mode = "edit";
+
+          me.addClass("mode-edit")
         }
   
         me.find('.editable.popin').editable("filter", { belongs : me }).hide();
