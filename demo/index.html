@@ -11,8 +11,24 @@
 
   </head>
   <body>
-    
+
+    <div class="editable always" id="test-always" data-edit-target="api:other:post">
+      <h3>Always editable Content</h3>
+      <div>
+        This text input is always turned on
+        <input type="text"
+               data-edit-type="string"
+               data-edit-name="always_on">
+
+        <a class="button" data-edit-action="submit">Send</a>
+      </div>
+    </div>
+
+    <hr />
+
     <div class="editable" id="test" data-edit-target="api:contact:post"  data-edit-id="0">
+
+      <h3>Toggled editable Content</h3>
       
       <div class="payload">
         <div data-edit-name="extra">Something Extra</div>
@@ -84,11 +100,66 @@
       </div>
 
 
-      <div id="test:sub" data-edit-target="api:post" data-edit-id="0">
+      <div id="test_sub" data-edit-target="api:post" data-edit-id="0">
         <div data-edit-type="number"
              data-edit-name="id">
              123
         </div>
+      </div>
+
+      <h4>Listing</h4>
+
+      <div id="test_listing" 
+           data-edit-module="api_listing" 
+           data-edit-toggled-by="#test"
+           data-edit-target="api:item">
+        
+        <div data-edit-component="list" data-edit-template="item-row">
+          <div data-edit-id="1">
+            <div data-edit-name="name"
+                 data-edit-type="string">
+              Item #1 
+            </div>
+            <a class="button stick-right" 
+               data-edit-action="remove" 
+               data-edit-toggled="edit">
+               &times;
+             </a>
+          </div>
+          <div data-edit-id="2">
+            <div data-edit-name="name"
+                 data-edit-type="string">
+              Item #2 
+            </div>
+            <a class="button stick-right" 
+               data-edit-action="remove" 
+               data-edit-toggled="edit">
+               &times;
+             </a>
+          </div>
+          <div data-edit-id="3">
+            <div data-edit-name="name"
+                 data-edit-type="string">
+              Item #3 
+            </div>
+            <a class="button stick-right" 
+               data-edit-action="remove" 
+               data-edit-toggled="edit">
+               &times;
+             </a>
+          </div>
+        </div>
+
+        <div class="editable always" 
+             data-edit-toggled="edit" 
+             data-edit-component="add">
+          <input type="text"
+                 placeholder="Item name"
+                 data-edit-type="string"
+                 data-edit-name="name" />
+          <a class="button" data-edit-action="add">Add Item</a>
+        </div>
+
       </div>
 
 
@@ -103,6 +174,17 @@
 
   <div id="editable-templates">
     <div id="check" class="checkbox"></div>
+
+    <div id="item-row">
+      <div data-edit-name="name"
+           data-edit-type="string">
+      </div>
+      <a class="button stick-right" 
+         data-edit-action="remove" 
+         data-edit-toggled="edit">
+         &times;
+      </a>
+    </div>
   </div>
 
   </body>

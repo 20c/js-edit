@@ -94,3 +94,7 @@ div[data-edit-target] {
 .editable > .payload {
   display: none;
 }
+
+*[data-edit-toggled="edit"] {
+  display: none;
+}

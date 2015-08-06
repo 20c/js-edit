@@ -15,6 +15,13 @@ a.button {
   cursor: pointer;
 }
 
+a.button.stick-right {
+  position: absolute;
+  right: 0px;
+  top: 4px;
+  display: default;
+}
+
 body > div.editable > div {
   padding: 10px;
 }
@@ -32,3 +39,14 @@ div.checkbox.yes {
 div.checkbox.no {
   background-color: red;
 }
+
+div[data-edit-component="list"] > div {
+  position: relative;
+  padding: 10px;
+  border-bottom: 1px #666 solid;
+}
+
+a.button[data-edit-toggled="edit"] {
+  display: none;
+}
+

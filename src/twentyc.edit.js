@@ -36,6 +36,18 @@ twentyc.editable = {
       });
     });
 
+    // initialize always toggled inputs
+    $('.editable.always').each(function(idx) {
+      var container = $(this);
+      container.find('[data-edit-type]').editable(
+        'filter', { belongs : container } 
+      ).each(function(idx) {
+        $(this).data("edit-always", true);
+        console.log("MANAGE", this);
+        twentyc.editable.input.manage($(this), container);
+      });
+    });
+
     this.initialized = true;
   }
 }
@@ -87,6 +99,11 @@ twentyc.editable.action = new twentyc.cls.Registry();
 twentyc.editable.action.register(
   "base", 
   {
+    
+    name : function() {
+      return this._meta.name;
+    },
+
     execute : function(trigger, container) {
       this.trigger = trigger
       this.container = container;
@@ -101,14 +118,15 @@ twentyc.editable.action.register(
         data : error.data
       }
       container.trigger("action-error", payload);
-      container.trigger("action-error:"+this._meta.name, payload);
+      container.trigger("action-error:"+this.name(), payload);
       if(this.loading_shim)
         this.container.children('.editable.loading-shim').hide();
     },
 
     signal_success : function(container, payload) {
       container.trigger("action-success", payload);
-      container.trigger("action-success:"+this._meta.name, payload);
+      console.log("SIGNAL SUCCESS",this.name());
+      container.trigger("action-success:"+this.name(), payload);
       if(this.loading_shim)
         this.container.children('.editable.loading-shim').hide();
     }
@@ -127,20 +145,13 @@ twentyc.editable.action.register(
   "base"
 );
 
-
 twentyc.editable.action.register(
   "submit",
   {
     loading_shim : true,
     execute : function(trigger, container) {
       this.base_execute(trigger, container);
-      var targetParam = container.data("edit-target").split(":")
 
-      // check if specified target has a handler, if not use standard XHR hander
-      if(!twentyc.editable.target.has(targetParam[0])) 
-        var handler = twentyc.editable.target.get("XHRPost")
-      else
-        var handler = twentyc.editable.target.get(targetParam[0])
       var me = this;
 
       try {
@@ -148,7 +159,7 @@ twentyc.editable.action.register(
         // try creating target - this automatically parses form data
         // into object literal 
         
-        var target = new handler(targetParam, container);
+        var target = twentyc.editable.target.instantiate(container);
       
       } catch(error) {
         
@@ -180,6 +191,91 @@ twentyc.editable.action.register(
   "base"
 );
 
+twentyc.editable.action.register(
+  "module-action",
+  {
+    name : function() {
+      return this.module._meta.name+"."+this.actionName;
+    },
+    execute : function(module, action, trigger, container) {
+      this.base_execute(trigger, container);
+      this.module = module;
+      this.actionName = action;
+      module.action = this;
+      this.module["execute_"+action](trigger, container);
+    }
+  },
+  "base"
+);
+
+/**
+ * container for module handler
+ *
+ * @module twentyc
+ * @namespace editable
+ * @class module
+ * @extends twentyc.cls.Registry
+ * @static
+ */
+
+twentyc.editable.module = new twentyc.cls.Registry();
+
+twentyc.editable.module.register(
+  "base", 
+  {
+    execute : function(trigger, container) {
+      var me = $(this), action = trigger.data("edit-action");
+
+      this.trigger = trigger;
+      this.container = container;
+      this.target = twentyc.editable.target.instantiate(container);
+
+      var comp = this.components = {};
+      container.find("[data-edit-component]").each(function(idx) {
+        var c = $(this);
+        comp[c.data("edit-component")] = c;
+      });
+      
+      handler = new (twentyc.editable.action.get("module-action"))
+      handler.loading_shim = this.loading_shim;
+      handler.execute(this, action, trigger, container);
+    }
+  }
+);
+
+twentyc.editable.module.register(
+  "listing",
+  {
+    add : function(rowId, trigger, container, data) {
+      var row = twentyc.editable.templates.copy(this.components.list.data("edit-template"))
+      var k;
+      row.attr("data-edit-id", rowId);
+      row.data("edit-id", rowId);
+      for(k in data) {
+        row.find('[data-edit-name="'+k+'"]').text(data[k]);
+      }
+      row.appendTo(this.components.list);
+      container.editable("sync");
+
+    },
+    remove : function(rowId, row, trigger, container) {
+      row.detach();
+    },
+    execute_add : function(trigger, container) {
+      var data = {};
+      this.components.add.editable("export", data);
+      this.data = data
+      this.add(null,trigger, container, data);
+    },
+    execute_remove : function(trigger, container) {
+      var row = trigger.closest("[data-edit-id]").first();
+      this.remove(row.data("edit-id"), row, trigger, container);
+    }
+  },
+  "base"
+);
+
+
 /**
  * allows you to setup and manage target handlers
  * 
@@ -190,6 +286,21 @@ twentyc.editable.action.register(
  */
 
 twentyc.editable.target = new twentyc.cls.Registry();
+
+twentyc.editable.target.instantiate = function(container) {
+  var handler,
+      targetParam = container.data("edit-target").split(":")
+
+  // check if specified target has a handler, if not use standard XHR hander
+  if(!twentyc.editable.target.has(targetParam[0])) 
+    handler = twentyc.editable.target.get("XHRPost")
+  else
+    handler = twentyc.editable.target.get(targetParam[0])
+  
+  // try creating target - this automatically parses form data
+  // into object literal 
+  return new handler(targetParam, container);
+}
 
 twentyc.editable.target.register(
   "base",
@@ -246,13 +357,36 @@ twentyc.editable.target.register(
 twentyc.editable.input = new (twentyc.cls.extend(
   "InputRegistry",
   {
+    
+    frame : function() {
+      var frame = $('<div class="editable input-frame"></div>');
+      return frame;
+    },
+
+    manage : function(element, container) {
+      
+      var it = new (this.get(element.data("edit-type")));
+      var par = element.parent()
+
+      it.container = container;
+      it.element = element;
+      it.frame = this.frame();
+
+      it.frame.insertBefore(element);
+      it.frame.append(element);
+
+      element.data("edit-input-instance", it);
+     
+      return it;
+    },
+
     create : function(name, source, container) {
     
       var it = new (this.get(name));
       it.source = source
       it.container = container
       it.element = it.make();
-      it.frame = $('<div class="editable input-frame"></div>');
+      it.frame = this.frame();
       it.frame.append(it.element);
       it.set(source.data("edit-value"));
 
@@ -558,6 +692,10 @@ twentyc.editable.templates = {
     return this._templates[id];
   },
 
+  copy : function(id) {
+    return this.get(id).clone().attr("id", null);
+  },
+
   init : function() {
     if(this.initialized)
       return;
@@ -598,16 +736,17 @@ $.fn.editable = function(action, arg) {
           l = this.length,
           result
 
-      // BELONGS, shortcut for first_closest:["data-edit-target", target]
+      // BELONGS (container), shortcut for first_closest:["data-edit-target", target]
       if(arg.belongs) {
-        arg.first_closest = ["[data-edit-target]", arg.belongs]
+        arg.first_closest = ["[data-edit-target], [data-edit-component]", arg.belongs]
       }
+
       
       // FIRST CLOSEST, first_closest:[selector, result]
 
       if(arg.first_closest) {
         for(; i < l; i++) {
-          closest = $(this[i]).closest(arg.first_closest[0]);
+          closest = $(this[i]).parent().closest(arg.first_closest[0]);
           if(closest.length && closest.get(0) == arg.first_closest[1].get(0))
             matched.push(this[i])
         }
@@ -629,6 +768,8 @@ $.fn.editable = function(action, arg) {
     var me = $(this);
   
     var hasTarget = (me.data("edit-target") != null);
+    var isComponent = (me.data("edit-component") != null);
+    var isContainer = (hasTarget || isComponent);
     var hasAction = (me.data("edit-action") != null);
     var hasType = (me.data("edit-type") != null);
   
@@ -641,17 +782,18 @@ $.fn.editable = function(action, arg) {
       // mark as initialized so there is no duplicate init
       me.data("edit-initialized", true);
 
+
       // CONTAINER
   
       if(hasTarget) {
         
         console.log("init container", me.data("edit-target"))
-        
-        // init contained interactive elements
-        me.find("[data-edit-action]").filter("a, input, select").editable(null, me)
-  
-        // init contained editable elements
-        me.find("[data-edit-type]").editable(null, me)
+        if(me.hasClass("always"))
+          me.data("edit-mode", "edit");
+        else
+          me.data("edit-mode", "view");
+ 
+        me.editable("sync");
 
         // create error message container
         var errorContainer = $('<div class="editable popin error"><div class="main"></div><div class="extra"></div></div>');
@@ -674,12 +816,8 @@ $.fn.editable = function(action, arg) {
           popin.show();
         });
 
-        // load required data-sets
-        me.find('[data-edit-data]').editable('filter', { belongs : $(this) }).each(function(idx) {
-          var dataId = $(this).data("edit-data");
-          twentyc.data.load(dataId);
-        });
-        
+       
+
       }
   
       // INTERACTIVE ELEMENT
@@ -702,17 +840,27 @@ $.fn.editable = function(action, arg) {
         
         me.on(eventName, function() {
   
-          var a = $(this).data("edit-action");
-          if(typeof(twentyc.editable.action.get(a)) != "function")
-            throw("Unknown action: " + a);
-
-          var handler = new (twentyc.editable.action.get(a));
+          var handler, a = $(this).data("edit-action");
+          var container = $(this).closest("[data-edit-target]");
+          if(!twentyc.editable.action.has(a)) { 
+            if(container.data("edit-module")) {
+              var module = twentyc.editable.module.get(container.data("edit-module"));
+              if(module) {
+                handler = new module();
+              }
+            }
+            if(!handler)
+              throw("Unknown action: " + a);
+          } else
+            handler = new (twentyc.editable.action.get(a));
           console.log("Executing action", a);
 
-          var r = handler.execute($(this), $(this).closest("[data-edit-target]"));
+          var r = handler.execute($(this), container);
           me.trigger("action:"+a, r);
   
         });
+
+        me.data("edit-parent", arg);
 
       }
   
@@ -726,7 +874,62 @@ $.fn.editable = function(action, arg) {
       }
   
     }
+
+    /****************************************************************************
+     * SYNC
+     **/
+    
+    else if(action == "sync") {
+
+      var mode = me.data("edit-mode") || "view";
+        
+      // init contained interactive elements
+      me.find("[data-edit-action]").
+        filter("a, input, select").
+        editable("filter", {belongs:me}).
+        each(function(idx) {
+          var child = $(this);
+          if(!child.data("edit-parent"))
+            child.editable(null, me)
+        });
   
+      // init contained editable elements
+      me.find("[data-edit-type]").
+        editable("filter", { belongs : me }).
+        each(function(idx) {
+          var child = $(this);
+          if(!child.data("edit-parent"))
+            child.editable(null, me)
+          if((child.data("edit-mode")||"view") != mode) 
+            child.editable("toggle");
+        });
+
+      // load required data-sets
+      me.find('[data-edit-data]').
+        editable('filter', { belongs : me }).
+        each(function(idx) {
+          var dataId = $(this).data("edit-data");
+          twentyc.data.load(dataId);
+        });
+
+      // toggle mode-toggled content
+      me.find('[data-edit-toggled]').
+         editable('filter', { belongs : me }).
+         each(function(idx) {
+           var child = $(this);
+           if(child.data("edit-toggled") != mode)
+             child.hide()
+           else
+             child.show()
+         });
+
+      // sync components
+      me.find('[data-edit-component]').
+        editable('filter', { belongs : me }).
+        editable('sync');
+
+    }
+
     /****************************************************************************
      * TOGGLE
      **/
@@ -736,14 +939,18 @@ $.fn.editable = function(action, arg) {
       // toggle edit mode on or off
   
       var mode = me.data("edit-mode")
+
+      if(me.hasClass("always"))
+        return;
+
       
-      if(hasTarget) {
+      if(isContainer) {
         
         // CONTAINER
-        
+
         if(mode == "edit") {
-          me.find('[data-edit-toggled="edit"]').hide();
-          me.find('[data-edit-toggled="view"]').show();
+          me.find('[data-edit-toggled="edit"]').editable("filter", { belongs : me }).hide();
+          me.find('[data-edit-toggled="view"]').editable("filter", { belongs : me }).show();
           mode = "view";
 
           me.removeClass("mode-edit")
@@ -752,21 +959,37 @@ $.fn.editable = function(action, arg) {
             me.trigger("edit-cancel");
 
         } else {
-          me.find('[data-edit-toggled="edit"]').show();
-          me.find('[data-edit-toggled="view"]').hide();
+          me.find('[data-edit-toggled="edit"]').editable("filter", { belongs : me }).show();
+          me.find('[data-edit-toggled="view"]').editable("filter", { belongs : me }).hide();
           mode = "edit";
 
           me.addClass("mode-edit")
         }
-  
+ 
+        // hide pop-ins
         me.find('.editable.popin').editable("filter", { belongs : me }).hide();
-        me.find("[data-edit-type]").editable("filter", { belongs : me }).editable("toggle", arg);
+
+        // toggled editable elements
+        me.find("[data-edit-type], [data-edit-component]").editable("filter", { belongs : me }).editable("toggle", arg);
+
+        // toggle other containers that are flagged to be toggled by this container
+        $("[data-edit-target]").filter("[data-edit-toggled-by]").each(function(idx) {
+          var other = $(this);
+          var cmp = $(other.data("edit-toggled-by"));
+          if(cmp.get(0) == me.get(0)) {
+            other.editable("toggle", arg);
+          }
+        });
+        
   
       } else if(hasType) {
       
         // EDITABLE ELEMENT
   
         var input;
+
+        if(me.data("edit-always"))
+          return;
   
         if(mode == "edit") {
           
@@ -799,7 +1022,7 @@ $.fn.editable = function(action, arg) {
           input.element.data('edit-name', me.data('edit-name'));
           input.element.data('edit-type', me.data('edit-type'));
           input.element.addClass("editable "+ me.data("edit-type"));
-  
+
           // store old content so we can switch back to it
           // in case of edit-cancel event
           me.data("edit-content-backup", me.html());
@@ -818,7 +1041,17 @@ $.fn.editable = function(action, arg) {
       me.trigger("toggle", [mode]);
   
     }
-  
+
+    /****************************************************************************
+     * TOGGLE LOADING SHIM
+     **/
+
+    else if(action == "loading-shim") {
+      if(arg == "show" || arg == "hide") {
+        me.children(".editable.loading-shim")[arg]();
+      }
+    }
+
     /****************************************************************************
      * EXPORT FORM DATA 
      **/
@@ -828,10 +1061,10 @@ $.fn.editable = function(action, arg) {
       // export form data to object literal
       
       
-      if(hasTarget) {
+      if(isContainer) {
         
         // container, find all inputs within, exit if not in edit mode
-        if(me.data("edit-mode") != "edit")
+        if(me.data("edit-mode") != "edit" && !me.hasClass("always"))
           return;
 
         // track validation errors in here
