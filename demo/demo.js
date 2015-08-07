@@ -50,7 +50,6 @@ twentyc.editable.module.register(
       console.log(this.target.data);
       new tc.u.SmartTimeout(function() {
         me.listing_add(new Date().getTime(), trigger, container, data);
-        me.action.signal_success(container, rowId);
       }, 500);
  
     }, 
@@ -61,7 +60,14 @@ twentyc.editable.module.register(
       console.log(this.target.data);
       new tc.u.SmartTimeout(function() {
         me.listing_remove(rowId, row, trigger, container);
-        me.action.signal_success(container, rowId);
+      }, 500);
+    },
+
+    submit : function(rowId, data, row, trigger, container) {
+      console.log("submit listing row", rowId, data);
+      var me = this;
+      new tc.u.SmartTimeout(function() {
+        me.listing_submit(rowId, data, row, trigger, container);
       }, 500);
     }
   },

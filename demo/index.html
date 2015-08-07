@@ -26,7 +26,10 @@
 
     <hr />
 
-    <div class="editable" id="test" data-edit-target="api:contact:post"  data-edit-id="0">
+    <div class="editable" 
+         id="test" 
+         data-edit-target="api:contact:post"  
+         data-edit-id="0">
 
       <h3>Toggled editable Content</h3>
       
@@ -111,10 +114,11 @@
 
       <div id="test_listing" 
            data-edit-module="api_listing" 
-           data-edit-toggled-by="#test"
+           data-edit-group="#test"
            data-edit-target="api:item">
         
-        <div data-edit-component="list" data-edit-template="item-row">
+        <div data-edit-component="list" 
+             data-edit-template="item-row">
           <div data-edit-id="1">
             <div data-edit-name="name"
                  data-edit-type="string">
@@ -128,6 +132,7 @@
           </div>
           <div data-edit-id="2">
             <div data-edit-name="name"
+                 data-edit-required="yes"
                  data-edit-type="string">
               Item #2 
             </div>
