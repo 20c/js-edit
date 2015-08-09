@@ -156,10 +156,24 @@ twentyc.editable.action.register(
     loading_shim : true,
     execute : function(trigger, container) {
       this.base_execute(trigger, container);
-
+      
       var me = this,
           modules = [],
+          targets = 1,
+          changed,
           i;
+
+      var dec_targets = function(ev,data) {
+        targets--;
+        if(!targets) {
+          if(data)
+            container.editable("toggle", { data:data });
+          else
+            container.editable("toggle");
+          container.editable("loading-shim", "hide");
+        }
+      }
+
 
       try {
         
@@ -167,6 +181,8 @@ twentyc.editable.action.register(
         // into object literal 
         
         var target = twentyc.editable.target.instantiate(container);
+        changed = target.data._changed;
+        console.log("changed", changed);
       
         // prepare modules
         container.find("[data-edit-module]").
@@ -175,7 +191,10 @@ twentyc.editable.action.register(
             var module = twentyc.editable.module.instantiate($(this));
             if(!module.has_action("submit")) {
               module.prepare();
-              modules.push([module, $(this)])
+              if(module.pending_submit.length) {
+                targets++;
+                modules.push([module, $(this)])
+              }
             }
           });
 
@@ -196,19 +215,26 @@ twentyc.editable.action.register(
         }
       }
 
-      $(target).on("success", function(ev, data) {
-        me.signal_success(container, data);
-        container.editable("toggle", { data : data });
-      });
-      $(target).on("error", function(ev, error) { 
-        me.signal_error(container, error);
-      });
+      if(changed){
+        $(target).on("success", function(ev, data) {
+          me.signal_success(container, data);
+        });
+        $(target).on("error", function(ev, error) { 
+          me.signal_error(container, error);
+        });
+        $(target).on("success", dec_targets);
 
-      // submit main target
-      var result = target.execute();
+        // submit main target
+        var result = target.execute();
+      } else
+        dec_targets({}, {});
       
       // submit grouped targets
-      container.editable("filter", { grouped : true }).not("[data-edit-module]").each(function(idx) {
+      var grouped = container.editable("filter", { grouped : true }).not("[data-edit-module]");
+
+      targets += grouped.length;
+      
+      grouped.each(function(idx) {
         var other = $(this);
         var action = new (twentyc.editable.action.get("submit"))();
         action.execute(trigger, other);
@@ -216,6 +242,7 @@ twentyc.editable.action.register(
 
       // submit modules
       for(i in modules) {
+        $(modules[i][0]).on("success", dec_targets);
         modules[i][0].execute(trigger, modules[i][1]);
       }
 
@@ -238,9 +265,11 @@ twentyc.editable.action.register(
       module.action = this;
       $(module.target).on("success", function(ev, d) {
         module.action.signal_success(container, d);
+        $(module).trigger("success", [d]);
       });
       $(module.target).on("error", function(ev, error) {
         module.action.signal_error(container, error);
+        $(module).trigger("error", [error]);
       });
       try {
         this.module["execute_"+action](trigger, container);
@@ -381,7 +410,10 @@ twentyc.editable.module.register(
       row.attr("data-edit-id", rowId);
       row.data("edit-id", rowId);
       for(k in data) {
-        row.find('[data-edit-name="'+k+'"]').text(data[k]);
+        row.find('[data-edit-name="'+k+'"]').each(function(idx) {
+          $(this).text(data[k]);
+          $(this).data("edit-value", data[k]);
+        });
       }
       row.appendTo(this.components.list);
       container.editable("sync");
@@ -743,7 +775,7 @@ twentyc.editable.input.register(
     },
 
     set : function(value) {
-      if(value == true)
+      if(value == true || (typeof value == "string" && value.toLowerCase() == "true"))
         this.element.prop("checked", true);
       else
         this.element.prop("checked", false);
@@ -1280,6 +1312,33 @@ $.fn.editable = function(action, arg) {
     }
 
     /****************************************************************************
+     * ADD PAYLOAD
+     **/
+
+    else if(action == "payload") {
+      
+      var payload = me.children(".payload")
+      if(!payload.length) {
+        payload = $('<div></div>')
+        payload.addClass("editable");
+        payload.addClass("payload");
+        me.prepend(payload);
+      }
+
+      var i, node;
+      for(i in arg) {
+        node = payload.children('[data-edit-name="'+i+'"]')
+        if(!node.length) {
+          node = $('<div></div>')
+          node.attr("data-edit-name", i)
+          payload.append(node);
+        }
+        node.text(arg[i]);
+      }
+
+    }
+
+    /****************************************************************************
      * EXPORT FORM DATA 
      **/
   
@@ -1332,6 +1391,11 @@ $.fn.editable = function(action, arg) {
           }
           
           arg[me.data("edit-name")] = input.export();
+          if(typeof arg["_changed"] == "undefined") {
+            arg["_changed"] = input.changed() ? 1: 0;
+          } else {
+            arg["_changed"] += input.changed() ? 1 : 0;
+          }
         }
       }
 
