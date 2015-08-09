@@ -361,6 +361,7 @@ twentyc.editable.module.register(
           return;
 
         row.find("[data-edit-type]").editable("export-fields", data);
+        row.editable("collect-payload", data);
         pending.push({ row : row, data : data, id : row.data("edit-id")});
       });
     },
@@ -962,6 +963,13 @@ $.fn.editable = function(action, arg) {
       throw({type:"ValidationErrors", data:arg}); 
     }
 
+  } else if(action == "collect-payload") {
+
+    this.find(".payload").children('[data-edit-name]').each(function(idx) {
+      var plel = $(this);
+      arg[plel.data("edit-name")] = plel.text().trim();
+    });
+ 
   }
 
 
@@ -1280,11 +1288,8 @@ $.fn.editable = function(action, arg) {
     
         // check if payload element exists, and if it does add the data from
         // it to the exported data
-        me.children('.payload').children('[data-edit-name]').each(function(idx) {
-          var plel = $(this);
-          arg[plel.data("edit-name")] = plel.text().trim();
-        });
-      
+        me.editable("collect-payload", arg);
+     
       } else if(hasType) {
 
         // editable element, see if input element exists and retrieve value
