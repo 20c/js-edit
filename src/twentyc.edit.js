@@ -229,6 +229,12 @@ twentyc.editable.action.register(
       this.module = module;
       this.actionName = action;
       module.action = this;
+      module.target.on("success", function(ev, d) {
+        module.action.signal_success(container, d);
+      });
+      module.target.on("error", function(ev, error) {
+        module.action.signal_error(container, error);
+      });
       this.module["execute_"+action](trigger, container);
     }
   },
