@@ -98,3 +98,7 @@ div[data-edit-target] {
 *[data-edit-toggled="edit"] {
   display: none;
 }
+
+#editable-templates {
+  display: none;
+}
