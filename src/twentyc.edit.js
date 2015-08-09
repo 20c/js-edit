@@ -173,8 +173,10 @@ twentyc.editable.action.register(
           editable("filter", { belongs : container }).
           each(function(idx) {
             var module = twentyc.editable.module.instantiate($(this));
-            module.prepare();
-            modules.push([module, $(this)])
+            if(!module.has_action("submit")) {
+              module.prepare();
+              modules.push([module, $(this)])
+            }
           });
 
       } catch(error) {
@@ -294,6 +296,10 @@ twentyc.editable.module.register(
       return;
     },
 
+    has_action : function(action) {
+      return this.container.find('[data-edit-action="'+action+'"]').length > 0;
+    },
+
     base : function(container) {
       var comp = this.components = {};
       container.find("[data-edit-component]").each(function(idx) {
@@ -314,7 +320,7 @@ twentyc.editable.module.register(
       handler.execute(this, action, trigger, container);
     },
 
-    prepare : function() { return; },
+    prepare : function() { this.prepared = true },
 
     execute_submit : function(trigger, container) {
       return;
@@ -349,6 +355,8 @@ twentyc.editable.module.register(
     },
 
     prepare : function() {
+      if(this.prepared)
+        return;
       var pending = this.pending_submit = [];
       this.components.list.children().each(function(idx) {
         var row = $(this),
@@ -364,6 +372,7 @@ twentyc.editable.module.register(
         row.editable("collect-payload", data);
         pending.push({ row : row, data : data, id : row.data("edit-id")});
       });
+      this.base_prepare();
     },
 
     add : function(rowId, trigger, container, data) {
@@ -394,6 +403,7 @@ twentyc.editable.module.register(
     execute_submit : function(trigger, container) {
       console.log("listing submit");
       var i, P;
+      this.prepare();
       if(!this.pending_submit.length) {
         this.action.signal_success(container);
         return;
@@ -1056,6 +1066,8 @@ $.fn.editable = function(action, arg) {
   
           var handler, a = $(this).data("edit-action");
           var container = $(this).closest("[data-edit-target]");
+
+          /*
           if(!twentyc.editable.action.has(a)) { 
             if(container.data("edit-module")) {
               handler = twentyc.editable.module.instantiate(container);
@@ -1064,7 +1076,14 @@ $.fn.editable = function(action, arg) {
               throw("Unknown action: " + a);
           } else
             handler = new (twentyc.editable.action.get(a));
+          */
           console.log("Executing action", a);
+
+          if(container.data("edit-module")) {
+             handler = twentyc.editable.module.instantiate(container);
+          }
+          if(!handler)
+             handler = new (twentyc.editable.action.get(a));
 
           var r = handler.execute($(this), container);
           me.trigger("action:"+a, r);
