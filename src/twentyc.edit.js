@@ -362,7 +362,7 @@ twentyc.editable.module.register(
       row.appendTo(this.components.list);
       container.editable("sync");
       this.action.signal_success(container, rowId);
-      container.trigger("listing:row-add", [rowId, row]);
+      container.trigger("listing:row-add", [rowId, row, data]);
     },
 
     remove : function(rowId, row, trigger, container) {
