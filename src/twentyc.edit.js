@@ -36,6 +36,12 @@ twentyc.editable = {
       });
     });
 
+    // init modules
+    $('[data-edit-module]').each(function(idx) {
+      var module = twentyc.editable.module.instantiate($(this));
+      module.init();
+    });
+
     // initialize always toggled inputs
     $('.editable.always').each(function(idx) {
       var container = $(this);
@@ -43,7 +49,6 @@ twentyc.editable = {
         'filter', { belongs : container } 
       ).each(function(idx) {
         $(this).data("edit-always", true);
-        console.log("MANAGE", this);
         twentyc.editable.input.manage($(this), container);
       });
     });
@@ -229,10 +234,10 @@ twentyc.editable.action.register(
       this.module = module;
       this.actionName = action;
       module.action = this;
-      module.target.on("success", function(ev, d) {
+      $(module.target).on("success", function(ev, d) {
         module.action.signal_success(container, d);
       });
-      module.target.on("error", function(ev, error) {
+      $(module.target).on("error", function(ev, error) {
         module.action.signal_error(container, error);
       });
       this.module["execute_"+action](trigger, container);
@@ -271,6 +276,10 @@ twentyc.editable.module.instantiate = function(container) {
 twentyc.editable.module.register(
   "base", 
   {
+    init : function() {
+      return;
+    },
+
     base : function(container) {
       var comp = this.components = {};
       container.find("[data-edit-component]").each(function(idx) {
@@ -314,6 +323,16 @@ twentyc.editable.module.register(
   {
     
     pending_submit : [],
+
+    init : function() {
+      
+      // a template has been specified for the add form
+      // try to build add row form from it
+      if(this.components.add.data("edit-template")) {
+        var addrow = twentyc.editable.templates.copy(this.components.add.data("edit-template"));
+        this.components.add.prepend(addrow);
+      }
+    },
 
     prepare : function() {
       var pending = this.pending_submit = [];

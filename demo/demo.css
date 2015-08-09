@@ -46,6 +46,10 @@ div[data-edit-component="list"] > div {
   border-bottom: 1px #666 solid;
 }
 
+div[data-edit-component="add"] a[data-edit-action="remove"] {
+  display: none !important;
+}
+
 a.button[data-edit-toggled="edit"] {
   display: none;
 }
