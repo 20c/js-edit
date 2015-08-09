@@ -362,18 +362,18 @@ twentyc.editable.module.register(
       row.appendTo(this.components.list);
       container.editable("sync");
       this.action.signal_success(container, rowId);
-      container.trigger("listing:row-add", [rowId, row, data]);
+      container.trigger("listing:row-add", [rowId, row, data, this]);
     },
 
     remove : function(rowId, row, trigger, container) {
       row.detach();
       this.action.signal_success(container, rowId);
-      container.trigger("listing:row-remove", [rowId, row]);
+      container.trigger("listing:row-remove", [rowId, row, this]);
     },
 
     submit : function(rowId, data, row, trigger, container) {
       this.action.signal_success(container, rowId);
-      container.trigger("listing:row-submit", [rowId, row, data]);
+      container.trigger("listing:row-submit", [rowId, row, data, this]);
     },
 
     execute_submit : function(trigger, container) {
