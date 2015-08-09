@@ -240,7 +240,21 @@ twentyc.editable.action.register(
       $(module.target).on("error", function(ev, error) {
         module.action.signal_error(container, error);
       });
-      this.module["execute_"+action](trigger, container);
+      try {
+        this.module["execute_"+action](trigger, container);
+      } catch(error) {
+
+        if(error.type) {
+          return this.signal_error(container, error);
+        } else {
+          
+          // unknown errors are re-thrown so the browser can catch
+          // them properly
+          throw(error);
+       
+        }
+ 
+      }
     }
   },
   "base"
@@ -944,8 +958,9 @@ $.fn.editable = function(action, arg) {
     });
     arg["_validationErrors"] = validationErrors;
 
-    if(!arg["_valid"])
+    if(!arg["_valid"]) {
       throw({type:"ValidationErrors", data:arg}); 
+    }
 
   }
 
