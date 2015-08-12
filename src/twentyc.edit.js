@@ -161,15 +161,20 @@ twentyc.editable.action.register(
           modules = [],
           targets = 1,
           changed,
+          status={"error":false},
           i;
 
-      var dec_targets = function(ev,data) {
+      var dec_targets = function(ev,data,error) {
         targets--;
+        if(error)
+          status.error = true;
         if(!targets) {
-          if(data)
-            container.editable("toggle", { data:data });
-          else
-            container.editable("toggle");
+          if(!status.error) {
+            if(data)
+              container.editable("toggle", { data:data });
+            else
+              container.editable("toggle");
+          }
           container.editable("loading-shim", "hide");
         }
       }
@@ -221,6 +226,7 @@ twentyc.editable.action.register(
         });
         $(target).on("error", function(ev, error) { 
           me.signal_error(container, error);
+          dec_targets({}, {}, true);
         });
         $(target).on("success", dec_targets);
 
@@ -243,6 +249,7 @@ twentyc.editable.action.register(
       // submit modules
       for(i in modules) {
         $(modules[i][0]).on("success", dec_targets);
+        $(modules[i][0]).on("error", function(){dec_targets({},{},true);});
         modules[i][0].execute(trigger, modules[i][1]);
       }
 
@@ -1309,6 +1316,14 @@ $.fn.editable = function(action, arg) {
       if(arg == "show" || arg == "hide") {
         me.children(".editable.loading-shim")[arg]();
       }
+    }
+
+    /****************************************************************************
+     * REMOVE ERROR POPINS
+     */
+
+    else if(action == "clear-error-popins") {
+      me.find('.editable.popin').editable("filter", { belongs : me }).hide();
     }
 
     /****************************************************************************
