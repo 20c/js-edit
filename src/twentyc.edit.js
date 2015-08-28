@@ -517,6 +517,12 @@ twentyc.editable.target.register(
   {
     execute : function() {
       var me = $(this), data = this.data;
+
+      if(this.context)
+        var sender = this.context;
+      else
+        var sender = this.sender;
+
       $.ajax({
         url : this.args[0],
         method : "POST",
@@ -525,11 +531,26 @@ twentyc.editable.target.register(
           me.trigger("success", data); 
         }
       }).fail(function(response) {
+        var info = [response.status + " " + response.statusText]
+        if(response.status == 400) {
+          var msg, k, i, info= ["The server rejected your data"];
+          for(k in response.responseJSON) {
+            sender.find('[data-edit-name="'+k+'"]').each(function(idx) {
+              var input = $(this).data("edit-input-instance");
+              if(input) {
+                msg = response.responseJSON[k];
+                if(typeof msg == "object" && msg.join)
+                  msg = msg.join(",");
+                input.show_validation_error(msg);
+              }
+            }); 
+          }
+        }
         me.trigger(
           "error",
           {
             type : "HTTPError",
-            info : response.status+" "+response.statusText
+            info : info.join("<br />")
           }
         );
       });
@@ -562,6 +583,7 @@ twentyc.editable.input = new (twentyc.cls.extend(
       var par = element.parent()
 
       it.container = container;
+      it.source = element;
       it.element = element;
       it.frame = this.frame();
 
@@ -569,6 +591,11 @@ twentyc.editable.input = new (twentyc.cls.extend(
       it.frame.append(element);
 
       it.original_value = it.get();
+
+      it.element.focus(function(ev) {
+        it.reset();
+      });
+
 
       element.data("edit-input-instance", it);
      
@@ -698,6 +725,29 @@ twentyc.editable.input.register(
   "string",
   {},
   "base"
+);
+
+twentyc.editable.input.register(
+  "password",
+  {
+    make : function() {
+      return $('<input type="password"></input>');
+    },
+
+    validate : function() {
+      var conf = this.source.data("edit-confirm-with")
+      if(conf) {
+        console.log(this.container.find('[data-edit-name="'+conf+'"]').data("edit-input-instance").get(), this.get());
+        return (this.container.find('[data-edit-name="'+conf+'"]').data("edit-input-instance").get() == this.get());
+      } else
+        return true;
+    },
+
+    validation_message : function() {
+      return "Needs to match password"
+    }
+  },
+  "string"
 );
 
 twentyc.editable.input.register(
