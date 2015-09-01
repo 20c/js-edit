@@ -30,7 +30,6 @@ twentyc.editable = {
     
     // hook into data load so we can update selects with matching datasets
     $(twentyc.data).on("load", function(ev, payload) {
-      console.log("data load finished", payload);
       $('select[data-edit-data="'+payload.id+'"]').each(function(idx) {
         $(this).data("edit-input").load(payload.data)
       });
@@ -130,7 +129,6 @@ twentyc.editable.action.register(
 
     signal_success : function(container, payload) {
       container.trigger("action-success", payload);
-      console.log("SIGNAL SUCCESS",this.name());
       container.trigger("action-success:"+this.name(), payload);
       if(this.loading_shim)
         this.container.children('.editable.loading-shim').hide();
@@ -187,7 +185,6 @@ twentyc.editable.action.register(
         
         var target = twentyc.editable.target.instantiate(container);
         changed = target.data._changed;
-        console.log("changed", changed);
       
         // prepare modules
         container.find("[data-edit-module]").
@@ -440,7 +437,6 @@ twentyc.editable.module.register(
     },
 
     execute_submit : function(trigger, container) {
-      console.log("listing submit");
       var i, P;
       this.prepare();
       if(!this.pending_submit.length) {
@@ -737,7 +733,6 @@ twentyc.editable.input.register(
     validate : function() {
       var conf = this.source.data("edit-confirm-with")
       if(conf) {
-        console.log(this.container.find('[data-edit-name="'+conf+'"]').data("edit-input-instance").get(), this.get());
         return (this.container.find('[data-edit-name="'+conf+'"]').data("edit-input-instance").get() == this.get());
       } else
         return true;
@@ -1100,7 +1095,6 @@ $.fn.editable = function(action, arg) {
   
       if(hasTarget) {
         
-        console.log("init container", me.data("edit-target"))
         if(me.hasClass("always"))
           me.data("edit-mode", "edit");
         else
@@ -1166,7 +1160,6 @@ $.fn.editable = function(action, arg) {
           } else
             handler = new (twentyc.editable.action.get(a));
           */
-          console.log("Executing action", a);
 
           if(container.data("edit-module")) {
              handler = twentyc.editable.module.instantiate(container);
