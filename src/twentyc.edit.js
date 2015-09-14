@@ -188,7 +188,7 @@ twentyc.editable.action.register(
       
         // prepare modules
         container.find("[data-edit-module]").
-          editable("filter", { belongs : container }).
+          //editable("filter", { belongs : container }).
           each(function(idx) {
             var module = twentyc.editable.module.instantiate($(this));
             if(!module.has_action("submit")) {
@@ -335,7 +335,7 @@ twentyc.editable.module.register(
 
     base : function(container) {
       var comp = this.components = {};
-      container.find("[data-edit-component]").each(function(idx) {
+      container.find("[data-edit-component]").editable("filter",{belongs:container}).each(function(idx) {
         var c = $(this);
         comp[c.data("edit-component")] = c;
       });
@@ -391,15 +391,18 @@ twentyc.editable.module.register(
       if(this.prepared)
         return;
       var pending = this.pending_submit = [];
+      var me = this;
       this.components.list.children().each(function(idx) {
         var row = $(this),
             data = {};
 
         var changedFields = row.find("[data-edit-type]").
-            editable("filter", "changed");
+            editable("filter", "changed").
+            editable("filter", { belongs : me.components.list }, true);
 
         if(changedFields.length == 0)
           return;
+
 
         row.find("[data-edit-type]").editable("export-fields", data);
         row.editable("collect-payload", data);
@@ -964,7 +967,7 @@ twentyc.editable.templates.register("link", $('<a></a>'));
  * jQuery functions
  */
 
-$.fn.editable = function(action, arg) {
+$.fn.editable = function(action, arg, dbg) {
 
   /******************************************************************************
    * FILTERS
@@ -996,6 +999,8 @@ $.fn.editable = function(action, arg) {
       if(arg.first_closest) {
         for(; i < l; i++) {
           closest = $(this[i]).parent().closest(arg.first_closest[0]);
+          if(dbg)
+            console.log("Comparing", closest.get(0), arg.first_closest[1].get(0));
           if(closest.length && closest.get(0) == arg.first_closest[1].get(0))
             matched.push(this[i])
         }
@@ -1309,7 +1314,7 @@ $.fn.editable = function(action, arg) {
 
           input.reset();
 
-          if(arg && arg.data)
+          if(arg && !$.isEmptyObject(arg.data))
             input.apply(arg.data[me.data("edit-name")])
           else
             me.html(me.data("edit-content-backup"))
