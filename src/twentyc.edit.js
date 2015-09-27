@@ -543,6 +543,11 @@ twentyc.editable.target.register(
                 input.show_validation_error(msg);
               }
             }); 
+            if(k == "non_field_errors") {
+              for(i in response.responseJSON[k]) 
+                info.push(response.responseJSON[k][i]);
+            }
+ 
           }
         }
         me.trigger(
@@ -1411,6 +1416,7 @@ $.fn.editable = function(action, arg, dbg) {
       
       
       if(isContainer) {
+
         
         // container, find all inputs within, exit if not in edit mode
         if(me.data("edit-mode") != "edit" && !me.hasClass("always"))
@@ -1430,6 +1436,8 @@ $.fn.editable = function(action, arg, dbg) {
         // check if payload element exists, and if it does add the data from
         // it to the exported data
         me.editable("collect-payload", arg);
+
+        me.trigger("export", [arg])
      
       } else if(hasType) {
 
