@@ -620,6 +620,8 @@ twentyc.editable.input = new (twentyc.cls.extend(
 
       if(it.placeholder)
         it.element.attr("placeholder", it.placeholder)
+      else if(it.source.data("edit-placeholder"))
+        it.element.attr("placeholder", it.source.data("edit-placeholder"))
 
       it.element.focus(function(ev) {
         it.reset();
@@ -905,17 +907,25 @@ twentyc.editable.input.register(
       this.source.html(this.value_to_label());
     },
 
+    add_opt : function(id, name) {
+      var opt = $('<option></option>');
+      opt.val(id);
+      opt.text(name);
+      if(id == this.source.data("edit-value"))
+        opt.prop("selected", true);
+      this.element.append(opt);
+    },
+
     load : function(data) {
       var k, v, opt;
       this.element.empty();
+      if(this.source.data("edit-data-all-entry")) {
+        var allEntry = this.source.data("edit-data-all-entry").split(":")
+        this.add_opt(allEntry[0], allEntry[1]);
+      }
       for(k in data) { 
         v = data[k];
-        opt = $('<option></option>');
-        opt.val(v.id);
-        opt.text(v.name);
-        if(v.id == this.source.data("edit-value"))
-          opt.prop("selected", true);
-        this.element.append(opt);
+        this.add_opt(v.id, v.name);
       }
     }
   },
