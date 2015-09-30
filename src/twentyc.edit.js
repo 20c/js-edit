@@ -42,7 +42,7 @@ twentyc.editable = {
     });
 
     // initialize always toggled inputs
-    $('.editable.always').each(function(idx) {
+    $('.editable.always').not(".auto-toggled").each(function(idx) {
       var container = $(this);
       container.find('[data-edit-type]').editable(
         'filter', { belongs : container } 
@@ -479,6 +479,8 @@ twentyc.editable.module.register(
 
 twentyc.editable.target = new twentyc.cls.Registry();
 
+twentyc.editable.target.error_handlers = {};
+
 twentyc.editable.target.instantiate = function(container) {
   var handler,
       targetParam = container.data("edit-target").split(":")
@@ -504,6 +506,16 @@ twentyc.editable.target.register(
       this.data = {}
       sender.editable("export", this.data)
     },
+    data_clean : function(removeEmpty) {
+      var i, r = {};
+      for(i in this.data) {
+        if(removeEmpty && (this.data[i] === null || this.data[i] === ""))
+          continue;
+        if(i.charAt(0) != "_") 
+          r[i] = this.data[i];
+      }
+      return r;
+    },
     data_valid : function() {
       return (this.data && this.data["_valid"]);
     },
@@ -522,6 +534,8 @@ twentyc.editable.target.register(
       else
         var sender = this.sender;
 
+      console.log("POST")
+
       $.ajax({
         url : this.args[0],
         method : "POST",
@@ -530,38 +544,43 @@ twentyc.editable.target.register(
           me.trigger("success", data); 
         }
       }).fail(function(response) {
-        var info = [response.status + " " + response.statusText]
-        if(response.status == 400) {
-          var msg, k, i, info= ["The server rejected your data"];
-          for(k in response.responseJSON) {
-            sender.find('[data-edit-name="'+k+'"]').each(function(idx) {
-              var input = $(this).data("edit-input-instance");
-              if(input) {
-                msg = response.responseJSON[k];
-                if(typeof msg == "object" && msg.join)
-                  msg = msg.join(",");
-                input.show_validation_error(msg);
-              }
-            }); 
-            if(k == "non_field_errors") {
-              for(i in response.responseJSON[k]) 
-                info.push(response.responseJSON[k][i]);
-            }
- 
-          }
-        }
-        me.trigger(
-          "error",
-          {
-            type : "HTTPError",
-            info : info.join("<br />")
-          }
-        );
+        twentyc.editable.target.error_handlers.http_json(response, me, sender);
       });
     }
   },
   "base"
 )
+
+twentyc.editable.target.error_handlers.http_json = function(response, me, sender) {
+  var info = [response.status + " " + response.statusText]
+  console.log(sender);
+  if(response.status == 400) {
+    var msg, k, i, info= ["The server rejected your data"];
+    for(k in response.responseJSON) {
+      sender.find('[data-edit-name="'+k+'"]').each(function(idx) {
+        var input = $(this).data("edit-input-instance");
+        if(input) {
+          msg = response.responseJSON[k];
+          if(typeof msg == "object" && msg.join)
+            msg = msg.join(",");
+          input.show_validation_error(msg);
+        }
+      }); 
+      if(k == "non_field_errors") {
+        for(i in response.responseJSON[k]) 
+          info.push(response.responseJSON[k][i]);
+      }
+ 
+    }
+  }
+  me.trigger(
+    "error",
+    {
+      type : "HTTPError",
+      info : info.join("<br />")
+    }
+  );
+}
 
 /**
  * allows you to setup and manage input types
@@ -582,6 +601,7 @@ twentyc.editable.input = new (twentyc.cls.extend(
     },
 
     manage : function(element, container) {
+      
       
       var it = new (this.get(element.data("edit-type")));
       var par = element.parent()
@@ -884,7 +904,10 @@ twentyc.editable.input.register(
   "select",
   {
     make : function() {
-      return $('<select></select>');
+      var node = $('<select></select>');
+      if(this.source.data("edit-multiple") == "yes")
+        node.prop("multiple", true);
+      return node;
     },
 
     set : function() {
