@@ -987,7 +987,7 @@ twentyc.editable.templates = {
     if(this.initialized)
       return;
 
-    $('#editable-templates').children().each(function(idx) {
+    $('#editable-templates, .editable-templates').children().each(function(idx) {
       twentyc.editable.templates.register(
         this.id,
         $(this)
