@@ -123,6 +123,7 @@ twentyc.editable.action.register(
       }
       container.trigger("action-error", payload);
       container.trigger("action-error:"+this.name(), payload);
+      $(this).trigger("error", payload);
       if(this.loading_shim)
         this.container.children('.editable.loading-shim').hide();
     },
@@ -130,6 +131,7 @@ twentyc.editable.action.register(
     signal_success : function(container, payload) {
       container.trigger("action-success", payload);
       container.trigger("action-success:"+this.name(), payload);
+      $(this).trigger("success", payload);
       if(this.loading_shim)
         this.container.children('.editable.loading-shim').hide();
     }
@@ -154,7 +156,7 @@ twentyc.editable.action.register(
     loading_shim : true,
     execute : function(trigger, container) {
       this.base_execute(trigger, container);
-      
+
       var me = this,
           modules = [],
           targets = 1,
@@ -167,7 +169,7 @@ twentyc.editable.action.register(
         if(error)
           status.error = true;
         if(!targets) {
-          if(!status.error) {
+          if(!status.error && !me.noToggle) {
             if(data)
               container.editable("toggle", { data:data });
             else
@@ -185,7 +187,7 @@ twentyc.editable.action.register(
         
         var target = twentyc.editable.target.instantiate(container);
         changed = target.data._changed;
-      
+
         // prepare modules
         container.find("[data-edit-module]").
           //editable("filter", { belongs : container }).
@@ -217,6 +219,9 @@ twentyc.editable.action.register(
         }
       }
 
+      var grouped = container.editable("filter", { grouped : true }).not("[data-edit-module]");
+      targets += grouped.length;
+ 
       if(changed){
         $(target).on("success", function(ev, data) {
           me.signal_success(container, data);
@@ -233,13 +238,13 @@ twentyc.editable.action.register(
         dec_targets({}, {});
       
       // submit grouped targets
-      var grouped = container.editable("filter", { grouped : true }).not("[data-edit-module]");
-
-      targets += grouped.length;
-      
+     
       grouped.each(function(idx) {
         var other = $(this);
         var action = new (twentyc.editable.action.get("submit"))();
+        action.noToggle = true;
+        $(action).on("success",dec_targets);
+        $(action).on("error", function(){dec_targets({},{},true);});
         action.execute(trigger, other);
       });
 
