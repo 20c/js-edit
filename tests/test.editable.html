@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Unit Tests: twentyc.edit.js</title>
+  <link rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.18.0.css">
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  <div style="display:none;">
+
+    <div id="test_0">
+      <div class="editable"
+           id="test_0_main"
+           data-edit-target="test">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+      </div>
+    </div>
+
+    <div id="test_1">
+      <div class="editable"
+           id="test_1_main"
+           data-edit-target="test">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+      </div>
+    </div>
+
+    <div id="test_2">
+      <div class="editable"
+           id="test_2_main"
+           data-edit-target="test:success:test_2"
+           data-edit-id="0">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+           <a class="button" data-edit-action="submit">Save</a>
+
+      </div>
+    </div>
+
+    <div id="test_4">
+      <div class="editable"
+           id="test_4_main"
+           data-edit-target="test:success:test_4"
+           data-edit-id="0">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+           <a class="button" data-edit-action="submit">Save</a>
+
+      </div>
+    </div>
+
+
+    <div id="test_3">
+      <div class="editable"
+           id="test_3_main"
+           data-edit-target="test:success:test_3"
+           data-edit-id="0">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+           <div class="editable"
+                data-edit-target="test:success:test_3_b"
+                data-edit-group="#test_3_main"
+                id="test_3_sub">
+
+                <div data-edit-type="string"
+                     data-edit-name="extra">Something</div>
+           
+           </div>
+
+           <div class="editable"
+                data-edit-target="test:success:test_3_c"
+                id="test_3_sub_c">
+
+                <div data-edit-type="string"
+                     data-edit-name="extra">Something</div>
+           
+           </div>
+
+
+           <a class="button" data-edit-action="submit">Save</a>
+
+      </div>
+    </div>
+
+    <div id="test_5">
+      <div class="editable"
+           id="test_5_main"
+           data-edit-target="test:success:test_5"
+           data-edit-id="0">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+           <div class="editable"
+                data-edit-target="test:failure:test_5_b"
+                data-edit-group="#test_5_main"
+                id="test_5_sub">
+
+                <div data-edit-type="string"
+                     data-edit-name="extra">Something</div>
+           
+           </div>
+
+           <a class="button" data-edit-action="submit">Save</a>
+
+      </div>
+    </div>
+
+   <div id="test_6">
+      <div class="editable"
+           id="test_6_main"
+           data-edit-target="test:success:test_6"
+           data-edit-id="0">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+           <a class="button" data-edit-action="submit">Save</a>
+
+      </div>
+    </div>
+
+
+   <div id="test_7">
+      <div class="editable"
+           id="test_7_main"
+           data-edit-target="test:failure:test_7"
+           data-edit-id="0">
+
+           <div data-edit-type="string"
+                data-edit-name="first_name">John</div>
+           
+           <div data-edit-type="string"
+                data-edit-name="last_name">Smith</div>
+
+           <div data-edit-type="number"
+                data-edit-name="customer">123</div>
+
+           <a class="button" data-edit-action="submit">Save</a>
+
+      </div>
+    </div>
+
+
+
+  </div>
+  <script src="//code.jquery.com/jquery-1.11.3.js"></script>
+  <script src="//code.jquery.com/qunit/qunit-1.18.0.js"></script>
+  <script src="../src/twentyc.core.js"></script>
+  <script src="../src/twentyc.edit.js"></script>
+  <script src="test.editable.js"></script>
+</body>
+</html>
