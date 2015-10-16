@@ -68,6 +68,7 @@ twentyc.editable.module.register(
       var me = this;
       new tc.u.SmartTimeout(function() {
         me.listing_submit(rowId, data, row, trigger, container);
+        $(me.target).trigger("success", me.target.data);
       }, 500);
     }
   },

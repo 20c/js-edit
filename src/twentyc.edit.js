@@ -176,6 +176,7 @@ twentyc.editable.action.register(
           i;
 
       var dec_targets = function(ev,data,error) {
+        console.log("dec_targets", targets, ev, data, error);
         targets--;
         if(error)
           status.error = true;
@@ -232,7 +233,7 @@ twentyc.editable.action.register(
 
       var grouped = container.editable("filter", { grouped : true }).not("[data-edit-module]");
       targets += grouped.length;
- 
+
       if(changed){
         $(target).on("success", function(ev, data) {
           me.signal_success(container, data);
@@ -617,8 +618,8 @@ twentyc.editable.input = new (twentyc.cls.extend(
     },
 
     wire : function(it, element, container) {
-      if(it.action_on_enter) {
-        var action = container.data("edit-enter-action") || "submit";
+      var action = container.data("edit-enter-action");
+      if(it.action_on_enter && action) {
         element.on("keydown", function(e) {
           console.log(e);
           if(e.which == 13) {
