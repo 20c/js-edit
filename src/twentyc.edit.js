@@ -176,7 +176,6 @@ twentyc.editable.action.register(
           i;
 
       var dec_targets = function(ev,data,error) {
-        console.log("dec_targets", targets, ev, data, error);
         targets--;
         if(error)
           status.error = true;
@@ -421,7 +420,7 @@ twentyc.editable.module.register(
           return;
 
 
-        row.find("[data-edit-type]").editable("filter", { belongs : row }).editable("export-fields", data);
+        row.find("[data-edit-type]").editable("filter", { belongs : me.components.list }).editable("export-fields", data);
         row.editable("collect-payload", data);
         pending.push({ row : row, data : data, id : row.data("edit-id")});
       });
@@ -551,8 +550,6 @@ twentyc.editable.target.register(
       else
         var sender = this.sender;
 
-      console.log("POST")
-
       $.ajax({
         url : this.args[0],
         method : "POST",
@@ -570,7 +567,6 @@ twentyc.editable.target.register(
 
 twentyc.editable.target.error_handlers.http_json = function(response, me, sender) {
   var info = [response.status + " " + response.statusText]
-  console.log(sender);
   if(response.status == 400) {
     var msg, k, i, info= ["The server rejected your data"];
     for(k in response.responseJSON) {
