@@ -151,6 +151,17 @@ twentyc.editable.action.register(
 );
 
 twentyc.editable.action.register(
+  "reset",
+  {
+    execute : function(trigger, container) {
+      container.editable("reset");
+      this.signal_success(container, {});
+    }
+  },
+  "base"
+);
+
+twentyc.editable.action.register(
   "submit",
   {
     loading_shim : true,
@@ -641,6 +652,8 @@ twentyc.editable.input = new (twentyc.cls.extend(
       it.frame.append(it.element);
       it.set(source.data("edit-value"));
 
+      console.log(source.data("edit-name"), source.data("edit-value"));
+
       it.original_value = it.get();
 
       if(it.placeholder)
@@ -743,9 +756,11 @@ twentyc.editable.input.register(
       this.element.addClass("validation-error");
     },
     
-    reset : function() {
+    reset : function(resetValue) {
       this.close_note();
       this.element.removeClass("validation-error");
+      if(resetValue)
+        this.set(this.original_value);
     },
 
     template_handlers : {}
@@ -1233,6 +1248,24 @@ $.fn.editable = function(action, arg, dbg) {
   
       }
   
+    }
+
+    /****************************************************************************
+     * RESET FORM
+     */
+
+    else if(action == "reset") {
+
+      me.find("[data-edit-type]").
+        editable("filter", { belongs : me }).
+        each(function(idx) {
+          $(this).data("edit-input-instance").reset(true);
+        });
+
+      me.editable("filter", {grouped:true}).not("[data-edit-module]").editable("reset");
+      me.find("[data-edit-module]").editable("filter", { belongs : me }).editable("reset");
+      me.find("[data-edit-component]").editable("filter", { belongs : me }).editable("reset");
+
     }
 
     /****************************************************************************
