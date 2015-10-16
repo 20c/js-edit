@@ -421,7 +421,7 @@ twentyc.editable.module.register(
           return;
 
 
-        row.find("[data-edit-type]").editable("export-fields", data);
+        row.find("[data-edit-type]").editable("filter", { belongs : row }).editable("export-fields", data);
         row.editable("collect-payload", data);
         pending.push({ row : row, data : data, id : row.data("edit-id")});
       });
@@ -621,7 +621,6 @@ twentyc.editable.input = new (twentyc.cls.extend(
       var action = container.data("edit-enter-action");
       if(it.action_on_enter && action) {
         element.on("keydown", function(e) {
-          console.log(e);
           if(e.which == 13) {
             handler = new (twentyc.editable.action.get(action));
             handler.execute(element, container);
@@ -666,8 +665,6 @@ twentyc.editable.input = new (twentyc.cls.extend(
       it.frame = this.frame();
       it.frame.append(it.element);
       it.set(source.data("edit-value"));
-
-      console.log(source.data("edit-name"), source.data("edit-value"));
 
       it.original_value = it.get();
 
@@ -1074,8 +1071,8 @@ $.fn.editable = function(action, arg, dbg) {
       if(arg.first_closest) {
         for(; i < l; i++) {
           closest = $(this[i]).parent().closest(arg.first_closest[0]);
-          if(dbg)
-            console.log("Comparing", closest.get(0), arg.first_closest[1].get(0));
+          //if(dbg)
+          //  console.log("Comparing", closest.get(0), arg.first_closest[1].get(0));
           if(closest.length && closest.get(0) == arg.first_closest[1].get(0))
             matched.push(this[i])
         }
