@@ -616,6 +616,23 @@ twentyc.editable.input = new (twentyc.cls.extend(
       return frame;
     },
 
+    wire : function(it, element, container) {
+      if(it.action_on_enter) {
+        var action = container.data("edit-enter-action") || "submit";
+        element.on("keydown", function(e) {
+          console.log(e);
+          if(e.which == 13) {
+            handler = new (twentyc.editable.action.get(action));
+            handler.execute(element, container);
+          }
+        });
+      }
+
+      it.element.focus(function(ev) {
+        it.reset();
+      });
+    },
+
     manage : function(element, container) {
       
       
@@ -632,10 +649,7 @@ twentyc.editable.input = new (twentyc.cls.extend(
 
       it.original_value = it.get();
 
-      it.element.focus(function(ev) {
-        it.reset();
-      });
-
+      this.wire(it, it.element, container);
 
       element.data("edit-input-instance", it);
      
@@ -661,9 +675,7 @@ twentyc.editable.input = new (twentyc.cls.extend(
       else if(it.source.data("edit-placeholder"))
         it.element.attr("placeholder", it.source.data("edit-placeholder"))
 
-      it.element.focus(function(ev) {
-        it.reset();
-      });
+      this.wire(it, it.element, container);
 
       return it;
     }
@@ -674,6 +686,8 @@ twentyc.editable.input = new (twentyc.cls.extend(
 twentyc.editable.input.register(
   "base",
   {
+    action_on_enter : false,
+    
     set : function(value) {
       if(value == undefined) {
         this.element.val(this.source.text().trim());
@@ -769,7 +783,9 @@ twentyc.editable.input.register(
 
 twentyc.editable.input.register(
   "string",
-  {},
+  {
+    action_on_enter : true
+  },
   "base"
 );
 
