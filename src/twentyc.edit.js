@@ -356,6 +356,11 @@ twentyc.editable.module.register(
         comp[c.data("edit-component")] = c;
       });
       this.container = container;
+      container.data("edit-module-instance", this);
+    },
+
+    get_target : function(container) {
+      return twentyc.editable.target.instantiate(container || this.container);
     },
 
     execute : function(trigger, container) {
@@ -397,7 +402,7 @@ twentyc.editable.module.register(
       
       // a template has been specified for the add form
       // try to build add row form from it
-      if(this.components.add.data("edit-template")) {
+      if(this.components.add && this.components.add.data("edit-template")) {
         var addrow = twentyc.editable.templates.copy(this.components.add.data("edit-template"));
         this.components.add.prepend(addrow);
       }
@@ -440,18 +445,21 @@ twentyc.editable.module.register(
       }
       row.appendTo(this.components.list);
       container.editable("sync");
-      this.action.signal_success(container, rowId);
+      if(this.action)
+        this.action.signal_success(container, rowId);
       container.trigger("listing:row-add", [rowId, row, data, this]);
     },
 
     remove : function(rowId, row, trigger, container) {
       row.detach();
-      this.action.signal_success(container, rowId);
+      if(this.action)
+        this.action.signal_success(container, rowId);
       container.trigger("listing:row-remove", [rowId, row, this]);
     },
 
     submit : function(rowId, data, row, trigger, container) {
-      this.action.signal_success(container, rowId);
+      if(this.action)
+        this.action.signal_success(container, rowId);
       container.trigger("listing:row-submit", [rowId, row, data, this]);
     },
 
@@ -459,7 +467,8 @@ twentyc.editable.module.register(
       var i, P;
       this.prepare();
       if(!this.pending_submit.length) {
-        this.action.signal_success(container);
+        if(this.action)
+          this.action.signal_success(container);
         return;
       }
       for(i in this.pending_submit) {
