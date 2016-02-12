@@ -551,8 +551,11 @@ twentyc.editable.target.register(
 twentyc.editable.target.register(
   "XHRPost",
   {
-    execute : function() {
+    execute : function(appendUrl, context, onSuccess, onFailure) {
       var me = $(this), data = this.data;
+
+      if(context)
+        this.context = context;
 
       if(this.context)
         var sender = this.context;
@@ -560,14 +563,18 @@ twentyc.editable.target.register(
         var sender = this.sender;
 
       $.ajax({
-        url : this.args[0],
+        url : this.args[0]+(appendUrl?"/"+appendUrl:""),
         method : "POST",
         data : this.data,
         success : function(response) { 
           me.trigger("success", data); 
+          if(onSuccess)
+            onSuccess(response, data)
         }
       }).fail(function(response) {
         twentyc.editable.target.error_handlers.http_json(response, me, sender);
+        if(onFailure)
+          onFailure(response)
       });
     }
   },
@@ -1020,6 +1027,18 @@ twentyc.editable.templates = {
 
   copy : function(id) {
     return this.get(id).clone().attr("id", null);
+  },
+
+  copy_and_replace : function(id, data, setEditValue) {
+    var k, tmpl=this.copy(id);
+    for(k in data) {
+      tmpl.find('[data-edit-name="'+k+'"]').each(function() {
+        $(this).text(data[k]);
+        if(setEditValue)
+          $(this).data("edit-value", data[k])
+      });
+    }
+    return tmpl;
   },
 
   init : function() {
