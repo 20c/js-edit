@@ -175,6 +175,7 @@ twentyc.editable.action.register(
           status={"error":false},
           i;
 
+
       var dec_targets = function(ev,data,error) {
         targets--;
         if(error)
@@ -185,7 +186,17 @@ twentyc.editable.action.register(
               container.editable("toggle", { data:data });
             else
               container.editable("toggle");
+          } 
+          /*
+          if(!status.error && container.data("edit-always")) {
+            // if container is always toggled to edit mode
+            // update the original_value property of the
+            // input instance, so we can properly pick up 
+            // changes for future edits
+            container.editable("accept-values");
           }
+          */
+
           container.editable("loading-shim", "hide");
         }
       }
@@ -406,6 +417,13 @@ twentyc.editable.module.register(
         var addrow = twentyc.editable.templates.copy(this.components.add.data("edit-template"));
         this.components.add.prepend(addrow);
       }
+      
+      if(this.container.data("edit-always")) {
+        var me = this;
+        this.container.on("listing:row-submit", function() {
+          me.components.list.editable("accept-values");
+        });
+      }
     },
 
     prepare : function() {
@@ -430,6 +448,18 @@ twentyc.editable.module.register(
         pending.push({ row : row, data : data, id : row.data("edit-id")});
       });
       this.base_prepare();
+    },
+
+    row : function(trigger) {
+      return trigger.closest("[data-edit-id]").first();
+    },
+
+    row_id : function(trigger) {
+      return this.row(trigger).data("edit-id")
+    },
+
+    clear : function() {
+      this.components.list.empty();
     },
 
     add : function(rowId, trigger, container, data) {
@@ -565,7 +595,7 @@ twentyc.editable.target.register(
       $.ajax({
         url : this.args[0]+(appendUrl?"/"+appendUrl:""),
         method : "POST",
-        data : this.data,
+        data : this.data_clean(this.data),
         success : function(response) { 
           me.trigger("success", data); 
           if(onSuccess)
@@ -953,6 +983,8 @@ twentyc.editable.input.register(
       var node = $('<select></select>');
       if(this.source.data("edit-multiple") == "yes")
         node.prop("multiple", true);
+      if(this.source.data("edit-data"))
+        node.attr("data-edit-data", this.source.data("edit-data"))
       return node;
     },
 
@@ -996,6 +1028,7 @@ twentyc.editable.input.register(
         v = data[k];
         this.add_opt(v.id, v.name);
       }
+      this.element.trigger("change");
     }
   },
   "base"
@@ -1095,8 +1128,6 @@ $.fn.editable = function(action, arg, dbg) {
       if(arg.first_closest) {
         for(; i < l; i++) {
           closest = $(this[i]).parent().closest(arg.first_closest[0]);
-          //if(dbg)
-          //  console.log("Comparing", closest.get(0), arg.first_closest[1].get(0));
           if(closest.length && closest.get(0) == arg.first_closest[1].get(0))
             matched.push(this[i])
         }
@@ -1196,9 +1227,10 @@ $.fn.editable = function(action, arg, dbg) {
   
       if(hasTarget) {
         
-        if(me.hasClass("always"))
+        if(me.hasClass("always")) {
           me.data("edit-mode", "edit");
-        else
+          me.data("edit-always", true);
+        } else
           me.data("edit-mode", "view");
  
         me.editable("sync");
@@ -1222,9 +1254,8 @@ $.fn.editable = function(action, arg, dbg) {
           popin.find('.main').html(twentyc.editable.error.humanize(payload.reason));
           popin.find('.extra').html(payload.info || "");
           popin.show();
+          return false;
         });
-
-       
 
       }
   
@@ -1238,7 +1269,8 @@ $.fn.editable = function(action, arg, dbg) {
   
         if(
           me.data("edit-type") == "bool" ||
-          me.data("edit-type") == "list" 
+          me.data("edit-type") == "list" || 
+          me.data("edit-type") == "select"
         ) 
         {
           eventName = "change";
@@ -1247,7 +1279,6 @@ $.fn.editable = function(action, arg, dbg) {
         // bind action event
         
         me.on(eventName, function() {
-  
           var handler, a = $(this).data("edit-action");
           var container = $(this).closest("[data-edit-target]");
 
@@ -1323,7 +1354,7 @@ $.fn.editable = function(action, arg, dbg) {
           if(!child.data("edit-parent"))
             child.editable(null, me)
         });
-  
+
       // init contained editable elements
       me.find("[data-edit-type]").
         editable("filter", { belongs : me }).
@@ -1331,8 +1362,9 @@ $.fn.editable = function(action, arg, dbg) {
           var child = $(this);
           if(!child.data("edit-parent"))
             child.editable(null, me)
-          if((child.data("edit-mode")||"view") != mode) 
+          if((child.data("edit-mode")||"view") != mode) { 
             child.editable("toggle");
+          }
         });
 
       // load required data-sets
@@ -1355,9 +1387,11 @@ $.fn.editable = function(action, arg, dbg) {
          });
 
       // sync components
-      me.find('[data-edit-component]').
-        editable('filter', { belongs : me }).
-        editable('sync');
+      me.find('[data-edit-component]').editable("filter", { belongs : me }).each(function() {
+        var comp = $(this);
+        comp.data("edit-mode", mode);
+        comp.editable("sync");
+      });
 
     }
 
@@ -1486,6 +1520,20 @@ $.fn.editable = function(action, arg, dbg) {
 
     else if(action == "clear-error-popins") {
       me.find('.editable.popin').editable("filter", { belongs : me }).hide();
+    }
+
+    /****************************************************************************
+     * ACCEPT VALUES
+     * This sets the original_values of all input instances within the container
+     * to the current input value
+     */
+
+    else if(action == "accept-values") {
+      me.find("[data-edit-type]").editable("filter", { belongs : me }).each(function() {
+        var input = $(this).data("edit-input-instance");
+        if(input)
+          input.original_value = input.get();
+      });
     }
 
     /****************************************************************************
