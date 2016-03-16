@@ -244,7 +244,7 @@ twentyc.editable.action.register(
       var grouped = container.editable("filter", { grouped : true }).not("[data-edit-module]");
       targets += grouped.length;
 
-      if(changed){
+      if(changed || container.data("edit-always-submit") == "yes"){
         $(target).on("success", function(ev, data) {
           me.signal_success(container, data);
         });
@@ -673,6 +673,9 @@ twentyc.editable.input = new (twentyc.cls.extend(
       it.element.focus(function(ev) {
         it.reset();
       });
+
+      if(it.wire)
+        it.wire();
     },
 
     manage : function(element, container) {
@@ -688,7 +691,7 @@ twentyc.editable.input = new (twentyc.cls.extend(
 
       it.frame.insertBefore(element);
       it.frame.append(element);
-
+       
       it.original_value = it.get();
 
       this.wire(it, it.element, container);
@@ -994,6 +997,7 @@ twentyc.editable.input.register(
         twentyc.data.load(dataId, { 
           callback : function(payload) {
             me.load(payload.data);
+            me.original_value = me.get()
           }
         });
       }
