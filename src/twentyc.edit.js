@@ -474,10 +474,12 @@ twentyc.editable.module.register(
         });
       }
       row.appendTo(this.components.list);
+      row.addClass("newrow");
       container.editable("sync");
       if(this.action)
         this.action.signal_success(container, rowId);
       container.trigger("listing:row-add", [rowId, row, data, this]);
+      this.components.list.scrollTop(function() { return this.scrollHeight; });
     },
 
     remove : function(rowId, row, trigger, container) {
@@ -857,7 +859,7 @@ twentyc.editable.input.register(
 twentyc.editable.input.register(
   "email",
   {
-    placeholder : "name@domain.com",
+    placeholder : "name@example.com",
 
     validate : function() {
       if(this.get() === "")
@@ -880,7 +882,7 @@ twentyc.editable.input.register(
 twentyc.editable.input.register(
   "url",
   {
-    placeholder : "http://",
+    placeholder : "http://www.example.com",
     validate : function() {
       var url = this.get()
       if(url === "")
