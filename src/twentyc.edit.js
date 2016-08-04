@@ -633,6 +633,13 @@ twentyc.editable.target.error_handlers.http_json = function(response, me, sender
       }
  
     }
+  } else {
+    if(response.responseJSON && response.responseJSON.non_field_errors) {
+      info = [];
+      var i;
+      for(i in response.responseJSON.non_field_errors)
+        info.push(response.responseJSON.non_field_errors[i]);
+    }
   }
   me.trigger(
     "error",
