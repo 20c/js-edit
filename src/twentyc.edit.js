@@ -599,6 +599,7 @@ twentyc.editable.target.register(
         method : "POST",
         data : this.data_clean(this.data),
         success : function(response) { 
+          data.xhr_response = response;
           me.trigger("success", data); 
           if(onSuccess)
             onSuccess(response, data)
