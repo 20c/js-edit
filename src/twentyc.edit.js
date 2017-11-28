@@ -722,6 +722,11 @@ twentyc.editable.input = new (twentyc.cls.extend(
       it.set(source.data("edit-value"));
 
       it.original_value = it.get();
+      if(source.data().hasOwnProperty("editResetValue")) {
+        it.reset_value = source.data("edit-reset-value") || null;
+      } else {
+        it.reset_value = it.original_value;
+      }
 
       if(it.placeholder)
         it.element.attr("placeholder", it.placeholder)
@@ -826,8 +831,10 @@ twentyc.editable.input.register(
     reset : function(resetValue) {
       this.close_note();
       this.element.removeClass("validation-error");
-      if(resetValue)
-        this.set(this.original_value);
+      if(resetValue) {
+        this.source.data("edit-value", this.reset_value);
+        this.set(this.reset_value);
+      }
     },
 
     template_handlers : {}
@@ -1026,8 +1033,14 @@ twentyc.editable.input.register(
       var opt = $('<option></option>');
       opt.val(id);
       opt.text(name);
-      if(id == this.source.data("edit-value"))
-        opt.prop("selected", true);
+      var value = this.source.data("edit-value")
+      if(this.source.data("edit-multiple") == "yes") {
+        if(value && $.inArray(id, value.split(",")) > -1)
+          opt.prop("selected", true);
+      } else {
+        if(id == value)
+          opt.prop("selected", true);
+      }
       this.element.append(opt);
     },
 
