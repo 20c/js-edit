@@ -218,7 +218,7 @@ twentyc.editable.action.register(
             if(!module.has_action("submit")) {
               module.prepare();
               if(module.pending_submit.length) {
-                targets++;
+                targets+=module.pending_submit.length;
                 modules.push([module, $(this)])
               }
             }
